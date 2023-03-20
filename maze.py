@@ -81,8 +81,17 @@ while True:
     all_cells_visited = False # change to exit loop
     cell = grid[round(GRID_WIDTH / 2)][round(GRID_HEIGHT / 2)] # start at middle, reassign to current cell
 
+    #while not all_cells_visited:
+        # do something
+
     # Update the screen
     pygame.display.flip()
 
 # Clean up
 pygame.quit()
+
+# 1) select random (white) cell to start with
+# 2) check that cell is not at edge of grid
+# 3) select random neigboring (white) cell and remove wall between it and current cell, change current cell to new one and add previous to stack.
+# 4) repeat step 3 until you find a cell with no unvisited neigbours (dead end)
+# 5) when at a dead end backtrack until you find a cell with an unvisited neighbour. switch current cell to this one, and back to step 2.
