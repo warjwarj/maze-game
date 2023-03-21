@@ -5,9 +5,9 @@ import sys
 import random
 
 # constants for window dimensions
-CELL_SIZE = 20
-GRID_WIDTH = 41
-GRID_HEIGHT = 41
+CELL_SIZE = 10
+GRID_WIDTH = 69 # x
+GRID_HEIGHT = 69 # y
 
 # window title
 WINDOW_TITLE = "Maze"
@@ -15,6 +15,7 @@ WINDOW_TITLE = "Maze"
 # predifined colours
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
+RED = (222, 90, 67)
 
 # use to instantiate cells and refer back to them
 class Cell(pygame.sprite.Sprite):
@@ -23,6 +24,8 @@ class Cell(pygame.sprite.Sprite):
         super().__init__()
         self.x = x
         self.y = y
+        self.coordinates = str(str(x) + "," + str(y))
+        self.visited = False
         self.colour = WHITE
 
     def draw(self, surface):
@@ -46,24 +49,37 @@ FramePerSec = pygame.time.Clock()
 
 # Create the 2D list used to store the instances of cells
 grid = []
-solid = True
+solid = False
 for x in range(GRID_WIDTH):
     grid.append([])
-    wall = True
+    wall = False
     for y in range(GRID_HEIGHT):
         cell = Cell(x, y)
-        if solid == True:
-            cell.colour = BLACK
-        elif wall == True:
-            cell.colour = BLACK
+        if y == 0 or y == GRID_HEIGHT - 1:
+            cell.colour = WHITE
+            cell.visited = True
+        else:
+            if solid == True:
+                cell.colour = BLACK
+            elif wall == True:
+                cell.colour = BLACK
+            if x == 0 or x == GRID_WIDTH - 1:
+                cell.colour = WHITE
+                cell.visited = True
         wall = not wall
         grid[x].append(cell)
     solid = not solid
 
+cellStack = [] # add visited cells to here
+maze_is_drawing = True # change to exit loop
+cell = grid[random.randrange(2, GRID_WIDTH, 2)][random.randrange(2, GRID_HEIGHT, 2)] # start at middle, reassign to current cell
+cell.colour = RED
+print(cell.x, cell.y)
+
 # Game loop
 while True:
 
-    FramePerSec.tick(10)
+    FramePerSec.tick(60)
 
     # Handle events
     for event in pygame.event.get():
@@ -77,15 +93,20 @@ while True:
             cell = grid[x][y]
             cell.draw(screen)
 
-    # start drawing maze
-    all_cells_visited = False # change to exit loop
-    cell = grid[round(GRID_WIDTH / 2)][round(GRID_HEIGHT / 2)] # start at middle, reassign to current cell
-
-    #while not all_cells_visited:
-        # do something
+    # move maze cursor per iteration of loop
+    # if maze_is_drawing:
+    #     possibleCells = [
+    #         grid[cell.x + 2][cell.y],
+    #         grid[cell.x - 2][cell.y],
+    #         grid[cell.x][cell.y + 2],
+    #         grid[cell.x][cell.y - 2]
+    #     ]
+    #     print(possibleCells)
 
     # Update the screen
     pygame.display.flip()
+
+
 
 # Clean up
 pygame.quit()
