@@ -8,7 +8,7 @@ import random
 # CONSTANT VARIABLES
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-CELL_SIZE = 10
+CELL_SIZE = 10 # in px
 GRID_WIDTH = 69 # x
 GRID_HEIGHT = 69 # y
 
@@ -28,7 +28,7 @@ pygame.display.set_caption(WINDOW_TITLE)
 clockspeed = pygame.time.Clock()
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEFINE FUNCTIONS/CLASSES
+# DEFINE CLASSS AND FUNCTIONS
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class Cell(pygame.sprite.Sprite):
@@ -49,6 +49,7 @@ class Cell(pygame.sprite.Sprite):
             CELL_SIZE
         )
         pygame.draw.rect(surface, self.colour, rect)
+    
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # SETUP FOR THE GRID
@@ -81,8 +82,8 @@ for x in range(GRID_WIDTH):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 game_active = True
+draw_maze = True
 cell_stack = [grid[random.randrange(2, GRID_WIDTH, 2)][random.randrange(2, GRID_HEIGHT, 2)]]
-print(cell_stack)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # GAME LOOP
@@ -90,70 +91,73 @@ print(cell_stack)
 
 while game_active:
 
-    # how quick the loop tries to run
-    clockspeed.tick(3)
+    # limit how quick the game loop tries to run
+    clockspeed.tick(30)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # DRAW MAZE
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    # cell we finished on last time
-    startcell = cell_stack.pop()
+    if draw_maze:
 
-    # possible cells to jump to and the walls inbetween
-    possible_cells = []
-    possible_walls = []
+        clockspeed.tick()
 
-    # populate lists above, checking that the cell has not been visited before.
-    try:
-        possible_cell = grid[cell.y + 2][cell.x]
-        if possible_cell.visited == False:
-            possible_cells.append(possible_cell)
-            possible_walls.append(grid[cell.y + 1][cell.x])
-    except IndexError:
-        pass
-    try:
-        possible_cell = grid[cell.y - 2][cell.x]
-        if possible_cell.visited == False:
-            possible_cells.append(possible_cell)
-            possible_walls.append(grid[cell.y - 1][cell.x])
-    except IndexError:
-        pass
-    try:
-        possible_cell = grid[cell.y][cell.x - 2]
-        if possible_cell.visited == False:
-            possible_cells.append(possible_cell)
-            possible_walls.append(grid[cell.y][cell.x - 1])
-    except IndexError:
-        pass
-    try:
-        possible_cell = grid[cell.y][cell.x + 2]
-        if possible_cell.visited == False:
-            possible_cells.append(possible_cell)
-            possible_walls.append(grid[cell.y][cell.x + 1])
-    except IndexError:
-        pass
+        # define cell we finished on last time
+        startcell = cell_stack[-1]
 
-    # do after checking for possible cells
-    startcell.visited = True
 
-    # define the cell we move to, and the wall between it and current cell.
-    endcell: Cell = None
-    wall: Cell = None
+        # define lists for possible cells to jump to and the walls inbetween
+        possible_cells = []
+        possible_walls = []
 
-    # handle possible cells if we have any, otherwise we are at a dead end.
-    if len(possible_cells) != 0:
-        r = random.randint(0, possible_cells.len())                   
-        endcell = possible_cells[r]
-        wall = possible_walls[r]
-    else:
-        # backtrack
-        pass
+        # populate lists above, checking that the cell has not been visited before.
+        try:
+            possible_cell = grid[startcell.x + 2][startcell.y]
+            if possible_cell.visited == False:
+                possible_cells.append(possible_cell)
+                possible_walls.append(grid[startcell.x + 1][startcell.y])
+        except IndexError:
+            pass
+        try:
+            possible_cell = grid[startcell.x - 2][startcell.y]
+            if possible_cell.visited == False:
+                possible_cells.append(possible_cell)
+                possible_walls.append(grid[startcell.x - 1][startcell.y])
+        except IndexError:
+            pass
+        try:
+            possible_cell = grid[startcell.x][startcell.y - 2]
+            if possible_cell.visited == False:
+                possible_cells.append(possible_cell)
+                possible_walls.append(grid[startcell.x][startcell.y - 1])
+        except IndexError:
+            pass
+        try:
+            possible_cell = grid[startcell.x][startcell.y + 2]
+            if possible_cell.visited == False:
+                possible_cells.append(possible_cell)
+                possible_walls.append(grid[startcell.x][startcell.y + 1])
+        except IndexError:
+            pass
 
-    # change colour of the wall and append chosen cell to the stack
-    wall.colour = WHITE
-    cell_stack.append(endcell)
-    
+        # do after checking for possible cells
+        startcell.visited = True
+
+        # check for dead end - no possible cells
+        if len(possible_cells) != 0:
+
+            # random number
+            r = random.randint(0, len(possible_cells) - 1)
+
+            # change colour of wall inbetween cells and append randomly chosen cell to the stack
+            cell_stack.append(possible_cells[r])
+            possible_walls[r].colour = WHITE
+
+        else:
+            cell_stack.pop()
+            if len(cell_stack) == 0:
+                draw_maze = False
+
     pygame.display.flip()
 
     # Handle events
