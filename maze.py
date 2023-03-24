@@ -49,67 +49,22 @@ class Cell(pygame.sprite.Sprite):
             CELL_SIZE
         )
         pygame.draw.rect(surface, self.colour, rect)
-    
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# SETUP FOR THE GRID
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def recursiveBacktracker():
 
-grid = []
-solid = False
-for x in range(GRID_WIDTH):
-    grid.append([])
-    wall = False
-    for y in range(GRID_HEIGHT):
-        cell = Cell(x, y)
-        if y == 0 or y == GRID_HEIGHT - 1:
-            cell.colour = RED
-            cell.visited = True
-        else:
-            if solid == True:
-                cell.colour = BLACK
-            elif wall == True:
-                cell.colour = BLACK
-            if x == 0 or x == GRID_WIDTH - 1:
-                cell.colour = RED
-                cell.visited = True
-        wall = not wall
-        grid[x].append(cell)
-    solid = not solid
+    # stack cells we have visited and take them off when a dead end is reached.
+    cell_stack = [grid[random.randrange(2, GRID_WIDTH, 2)][random.randrange(2, GRID_HEIGHT, 2)]]
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# GAME LOOP VARIABLES
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # use to exit loop
+    drawing_maze = True
 
-game_active = True
-draw_maze = True
-cell_stack = [grid[random.randrange(2, GRID_WIDTH, 2)][random.randrange(2, GRID_HEIGHT, 2)]]
+    # recurse
+    while drawing_maze:
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# GAME LOOP
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-while game_active:
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # SETUP MAZE
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    # draw grid
-    for x in range(GRID_WIDTH):
-        for y in range(GRID_HEIGHT):
-            cell = grid[x][y]
-            cell.draw(screen)
-
-    # check if finished
-    if draw_maze:
-
-        # draw loop quickly
         clockspeed.tick()
 
         # define cell we finished on last time
         startcell = cell_stack[-1]
-        startcell.draw(screen)
 
         # define lists for possible cells to jump to and the walls inbetween
         possible_cells = []
@@ -148,7 +103,7 @@ while game_active:
         # do after checking for possible cells
         startcell.visited = True
 
-        # check for dead end - no possible cells
+        # no dead end
         if len(possible_cells) != 0:
 
             # random number
@@ -157,13 +112,80 @@ while game_active:
             # change colour of wall inbetween cells and append randomly chosen cell to the stack
             cell_stack.append(possible_cells[r])
             possible_walls[r].colour = WHITE
+            possible_walls[r].draw(screen)
 
+        # dead end
         else:
 
-            # backtrack by one cell & check if we have finished
+            # backtrack by one cell & check if we have finished, return if so
             cell_stack.pop()
             if len(cell_stack) == 0:
-                draw_maze = False
+                drawing_maze = False
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        pygame.display.flip()
+
+    return
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# GRID SETUP
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# create and populate tyhe grid
+grid = []
+solid = False
+for x in range(GRID_WIDTH):
+    grid.append([])
+    wall = False
+    for y in range(GRID_HEIGHT):
+        cell = Cell(x, y)
+        if y == 0 or y == GRID_HEIGHT - 1:
+            cell.colour = RED
+            cell.visited = True
+        else:
+            if solid == True:
+                cell.colour = BLACK
+            elif wall == True:
+                cell.colour = BLACK
+            if x == 0 or x == GRID_WIDTH - 1:
+                cell.colour = RED
+                cell.visited = True
+        wall = not wall
+        grid[x].append(cell)
+    solid = not solid
+
+# draw grid
+for x in range(GRID_WIDTH):
+    for y in range(GRID_HEIGHT):
+        cell = grid[x][y]
+        cell.draw(screen)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# GAME LOOP VARIABLES
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+game_active = True
+draw_maze = True
+cell_stack = [grid[random.randrange(2, GRID_WIDTH, 2)][random.randrange(2, GRID_HEIGHT, 2)]]
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# GAME LOOP
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+while game_active:
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # SETUP MAZE
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    # check if finished
+    if draw_maze:
+        recursiveBacktracker()
+        draw_maze = False
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # HANDLE EVENTS
