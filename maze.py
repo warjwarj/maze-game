@@ -91,20 +91,25 @@ cell_stack = [grid[random.randrange(2, GRID_WIDTH, 2)][random.randrange(2, GRID_
 
 while game_active:
 
-    # limit how quick the game loop tries to run
-    clockspeed.tick(30)
-
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # DRAW MAZE
+    # SETUP MAZE
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    # draw grid
+    for x in range(GRID_WIDTH):
+        for y in range(GRID_HEIGHT):
+            cell = grid[x][y]
+            cell.draw(screen)
+
+    # check if finished
     if draw_maze:
 
+        # draw loop quickly
         clockspeed.tick()
 
         # define cell we finished on last time
         startcell = cell_stack[-1]
-
+        startcell.draw(screen)
 
         # define lists for possible cells to jump to and the walls inbetween
         possible_cells = []
@@ -154,24 +159,22 @@ while game_active:
             possible_walls[r].colour = WHITE
 
         else:
+
+            # backtrack by one cell & check if we have finished
             cell_stack.pop()
             if len(cell_stack) == 0:
                 draw_maze = False
 
-    pygame.display.flip()
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # HANDLE EVENTS
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    # Handle events
+    # game ended?
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game_active = False
             pygame.quit()
             sys.exit()
-
-    # draw grid
-    for x in range(GRID_WIDTH):
-        for y in range(GRID_HEIGHT):
-            cell = grid[x][y]
-            cell.draw(screen)
 
     pygame.display.flip()
 
