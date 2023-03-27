@@ -5,7 +5,7 @@ import sys
 import random
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# CONSTANT VARIABLES
+# CONSTANTS + GLOBALS
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CELL_SIZE = 10 # in px
@@ -17,6 +17,8 @@ WINDOW_TITLE = "Maze"
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (222, 90, 67)
+
+grid = []
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # SETUP FOR GENERIC PYGAME STUFF
@@ -50,6 +52,21 @@ class Cell(pygame.sprite.Sprite):
         )
         pygame.draw.rect(surface, self.colour, rect)
 
+class PlayerSprite(pygame.sprite.Sprite):
+    
+    def __init__(self, cell):
+        super.__init__()
+        self.image = pygame.Surface(CELL_SIZE * 0.7, CELL_SIZE * 0.7)
+        pygame.draw.circle(self.image, RED, [cell.x, cell.y], CELL_SIZE / 2)
+
+def processBasicEvents():
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+    pygame.display.flip()
+
+# maze generation
 def recursiveBacktracker():
 
     # stack cells we have visited and take them off when a dead end is reached.
@@ -122,12 +139,7 @@ def recursiveBacktracker():
             if len(cell_stack) == 0:
                 drawing_maze = False
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
-        pygame.display.flip()
+        processBasicEvents()
 
     return
 
@@ -135,8 +147,7 @@ def recursiveBacktracker():
 # GRID SETUP
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# create and populate tyhe grid
-grid = []
+# create and populate the grid
 solid = False
 for x in range(GRID_WIDTH):
     grid.append([])
@@ -191,14 +202,7 @@ while game_active:
     # HANDLE EVENTS
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    # game ended?
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            game_active = False
-            pygame.quit()
-            sys.exit()
-
-    pygame.display.flip()
+    processBasicEvents()
 
 pygame.quit()
 
