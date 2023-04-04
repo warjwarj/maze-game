@@ -9,15 +9,16 @@ import random
 # CONSTANTS + GLOBALS
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-CELL_SIZE = 10 # in px
-GRID_WIDTH = 69 # x
-GRID_HEIGHT = 69 # y
+CELL_SIZE = 30 # in px
+GRID_WIDTH = 29 # x
+GRID_HEIGHT = 29 # y
 
 WINDOW_TITLE = "Maze"
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (222, 90, 67)
+BLUE = (3, 198, 252)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # SETUP FOR GENERIC PYGAME STUFF
@@ -39,26 +40,93 @@ def processBasicEvents(update_display=True):
     if update_display:
         pygame.display.flip()
 
-class Cell(pygame.sprite.Sprite):
+class Player(pygame.sprite.Sprite):
 
-    def __init__(self, x, y, cell_size):
+    # the possible cells that a player can move to, if they are on the given cell.
+    @staticmethod
+    def possibleCells(cell, grid):
+
+        # single operator = one cell in specified direction
+        # double operator = furthest reachable cell in specified direction
+        possibleCells = { "x+": 0, "x-": 0, "y+": 0, "y-": 0, "x++": 0, "x--": 0, "y++": 0, "y--": 0 }
+
+        if grid.grid_array[cell.x + 1][cell.y].wall == False:
+            possibleCells["x+"] = grid.grid_array[cell.x + 1][cell.y]
+        if grid.grid_array[cell.x - 1][cell.y].wall == False:
+            possibleCells["x-"] = grid.grid_array[cell.x - 1][cell.y]
+        if grid.grid_array[cell.x][cell.y + 1].wall == False:
+            possibleCells["y+"] = grid.grid_array[cell.x][cell.y + 1]
+        if grid.grid_array[cell.x][cell.y - 1].wall == False:
+            possibleCells["y-"] = grid.grid_array[cell.x][cell.y - 1]
+        
+        populated = False
+              
+        # loop for no more than the max width/height of the grid
+        for i in range(grid.col_num if grid.col_num > grid.row_num else grid.row_num, 1):
+
+            if not possibleCells["x++"] and grid[cell.x + i][cell.y].wall == False:
+                possibleCells["x++"] = grid[cell.x + 1][cell.y]
+            if not possibleCells["x--"] and grid[cell.x - i][cell.y].wall == False:
+                possibleCells["x--"] = grid[cell.x - i][cell.y]
+            if not possibleCells["y++"] and grid[cell.x][cell.y + i].wall == False:
+                possibleCells["y++"] = grid[cell.x][cell.y + i]
+            if not possibleCells["y--"] and grid[cell.x][cell.y - i].wall == False:
+                possibleCells["y--"] = grid[cell.x][cell.y - i]
+
+        vlas = list(possibleCells.values())
+        print(vlas)
+        for i in vlas:
+            vlas[i].colour = BLUE
+        
+        pygame.display.flip()
+            
+        
+
+    def __init__(self, grid, start_cell, surface):
         super().__init__()
-        self.x = x
-        self.y = y
-        self.cell_size = cell_size
-        self.visited = False
-        self.colour = WHITE
+        self.cell = start_cell
+        self.surface = pygame.Surface((start_cell.cell_size, start_cell.cell_size))
+        surface.blit(self.surface, self.surface.get_rect())
+        self.possibleCells(self.cell, grid)
 
-    def draw(self, surface):
-        rect = pygame.Rect(
-            self.x * self.cell_size,
-            self.y * self.cell_size,
-            self.cell_size,
-            self.cell_size
-        )
-        pygame.draw.rect(surface, self.colour, rect)
+    def move(self, grid):
+
+        processBasicEvents(False)
+
+        #self.possibleCells(grid)
+
+        for event in pygame.event.get():
+            if event == pygame.event.K_UP:
+                self.cell
+            if event == pygame.event.K_DOWN:
+                self.rect.move_ip(0, 5)
+            if event == pygame.eventK_LEFT:
+                self.rect.move_ip(-5, 0)
+            if event == pygame.eventK_RIGHT:
+                self.rect.move_ip(5, 0)
+
 
 class Grid():
+
+    class Cell(pygame.sprite.Sprite):
+
+        def __init__(self, x, y, cell_size):
+            super().__init__()
+            self.x = x
+            self.y = y
+            self.cell_size = cell_size
+            self.visited = False
+            self.colour = WHITE
+            self.wall = False
+
+        def draw(self, surface):
+            self.rect = pygame.Rect(
+                self.x * self.cell_size,
+                self.y * self.cell_size,
+                self.cell_size,
+                self.cell_size
+            )
+            pygame.draw.rect(surface, self.colour, self.rect)
 
     @staticmethod
     def draw(cols, rows, cell_size):
@@ -69,15 +137,17 @@ class Grid():
             grid.append([])
             wall = False
             for y in range(rows):
-                cell = Cell(x, y, cell_size)
+                cell = Grid.Cell(x, y, cell_size)
                 if y == 0 or y == rows - 1:
                     cell.colour = RED
                     cell.visited = True
                 else:
                     if solid == True:
                         cell.colour = BLACK
+                        cell.wall = True
                     elif wall == True:
                         cell.colour = BLACK
+                        cell.wall = True
                     if x == 0 or x == cols - 1:
                         cell.colour = RED
                         cell.visited = True
@@ -183,6 +253,8 @@ class Grid():
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 game_active = True
+playing = True
+
 draw_maze = True
 grid = Grid(GRID_WIDTH, GRID_HEIGHT, CELL_SIZE)
 
@@ -193,19 +265,28 @@ grid = Grid(GRID_WIDTH, GRID_HEIGHT, CELL_SIZE)
 while game_active:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # SETUP MAZE
+    # GAME SETUP
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     # check if finished
     if draw_maze:
-        grid.backtrackRecursively(grid, True)
+        grid.backtrackRecursively(grid, False)
         draw_maze = False
+    
+    # create player sprite, passing cell to start on
+    player = Player(grid, grid.grid_array[2][2], SCREEN_SURFACE)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # HANDLE EVENTS
+    # PLAY GAME
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    processBasicEvents()
+    while playing:
+        
+        # 30 ms
+        clockspeed.tick(30)
+
+        # process input for movement of the player sprite
+        player.move()
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # END OF GAME LOOP
