@@ -61,24 +61,28 @@ class Player(pygame.sprite.Sprite):
         if grid.grid_array[xpos - 1][ypos].wall == False:
             self.movements["x-"] = grid.grid_array[xpos - 1][ypos]
 
+        if grid.grid_array[xpos][ypos - 1].wall == False:
+            self.movements["y+"] = grid.grid_array[xpos][ypos - 1]
 
         if grid.grid_array[xpos][ypos + 1].wall == False:
-            self.movements["y+"] = grid.grid_array[xpos][ypos + 1]
-
-
-        if grid.grid_array[xpos][ypos - 1].wall == False:
-            self.movements["y-"] = grid.grid_array[xpos][ypos - 1]
+            self.movements["y-"] = grid.grid_array[xpos][ypos + 1]
                   
         # loop for no more than the max width/height of the grid
-        for i in range(grid.col_num if grid.col_num > grid.row_num else grid.row_num, 1):
 
-            if not self.movements["x++"] and grid[xpos + i][ypos].wall == False:
+        maxdimension = grid.col_num if grid.col_num > grid.row_num else grid.row_num
+
+        for i in range(maxdimension, 1):
+            
+            if grid[xpos + i][ypos].wall == False:
                 self.movements["x++"] = grid[xpos + 1][ypos]
-            if not self.movements["x--"] and grid[xpos - i][ypos].wall == False:
+
+            if grid[xpos - i][ypos].wall == False:
                 self.movements["x--"] = grid[xpos - i][ypos]
-            if not self.movements["y++"] and grid[xpos][ypos + i].wall == False:
+
+            if grid[xpos][ypos + i].wall == False:
                 self.movements["y++"] = grid[xpos][ypos + i]
-            if not self.movements["y--"] and grid[xpos][ypos - i].wall == False:
+
+            if grid[xpos][ypos - i].wall == False:
                 self.movements["y--"] = grid[xpos][ypos - i]
 
         print(self.movements)
