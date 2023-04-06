@@ -18,7 +18,10 @@ WINDOW_TITLE = "Maze"
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (222, 90, 67)
-BLUE = (3, 198, 252)
+DARK_BLUE = (3, 36, 252)
+LIGHTER_BLUE = (3, 194, 252)
+LIGHT_BLUE = (92, 211, 247)
+GREEN = (28, 252, 3)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # SETUP FOR GENERIC PYGAME STUFF
@@ -40,53 +43,93 @@ def processBasicEvents(update_display=True):
     if update_display:
         pygame.display.flip()
 
-# regarding cell movement chronology:
-# define possible cells to move to, highlight.
-# move to that cell, in one call of the move function
+# regarding player/cell movement chronology:
+# on construction, define possible cells to move to, highlight.
+# move to that cell, in ONE call of the move function.
 # after player has moved then calculate possible cells again
 
 class Player(pygame.sprite.Sprite):
 
     # the possible cells that a player can move to, if they are on the given cell.
-    def getPotentialCells(self, cell, grid):
+    # "y+" IS DOWN AND "y-" IS UP. I REVERSE SO THAT APPEARS LOGICAL IN MOVEMENT DICT
+    def getmovements(self, cell, grid):
 
-        xpos = cell.x
-        ypos = cell.y
+        # reset previous colours
+        for i in self.movements.keys():
+            if self.movements[i]:
+                if self.movements[i].colour is not WHITE:
+                    self.movements[i].colour = WHITE
+
+        xposition = cell.x
+        yposition = cell.y
 
         # single operator = one cell in specified direction
         # double operator = furthest reachable cell in specified direction
-        if grid.grid_array[xpos + 1][ypos].wall == False:
-            self.movements["x+"] = grid.grid_array[xpos + 1][ypos]
+        if grid.grid_array[xposition + 1][yposition].wall == False:
+            self.movements["x+"] = grid.grid_array[xposition + 1][yposition]
         
-        if grid.grid_array[xpos - 1][ypos].wall == False:
-            self.movements["x-"] = grid.grid_array[xpos - 1][ypos]
+        if grid.grid_array[xposition - 1][yposition].wall == False:
+            self.movements["x-"] = grid.grid_array[xposition - 1][yposition]
 
-        if grid.grid_array[xpos][ypos - 1].wall == False:
-            self.movements["y+"] = grid.grid_array[xpos][ypos - 1]
+        if grid.grid_array[xposition][yposition - 1].wall == False:
+            self.movements["y+"] = grid.grid_array[xposition][yposition - 1]
 
-        if grid.grid_array[xpos][ypos + 1].wall == False:
-            self.movements["y-"] = grid.grid_array[xpos][ypos + 1]
+        if grid.grid_array[xposition][yposition + 1].wall == False:
+            self.movements["y-"] = grid.grid_array[xposition][yposition + 1]
                   
+        # set these flags when we reach a wall in a direction | positive, negative
+        xPos, xNeg, yPos, yNeg = True, True, True, True
+
         # loop for no more than the max width/height of the grid
+        for i in range(1, grid.col_num if grid.col_num > grid.row_num else grid.row_num):
 
-        maxdimension = grid.col_num if grid.col_num > grid.row_num else grid.row_num
-
-        for i in range(maxdimension, 1):
-            
-            if grid[xpos + i][ypos].wall == False:
-                self.movements["x++"] = grid[xpos + 1][ypos]
-
-            if grid[xpos - i][ypos].wall == False:
-                self.movements["x--"] = grid[xpos - i][ypos]
-
-            if grid[xpos][ypos + i].wall == False:
-                self.movements["y++"] = grid[xpos][ypos + i]
-
-            if grid[xpos][ypos - i].wall == False:
-                self.movements["y--"] = grid[xpos][ypos - i]
-
-        print(self.movements)
-
+            if xPos:
+                try:
+                    if grid.grid_array[xposition + i][yposition].wall == False:
+                        self.movements["x++"] = grid.grid_array[xposition + i][yposition]
+                    else:
+                        xPos = False
+                except IndexError:
+                    self.movements["x++"] = 0
+                    pass
+            if xNeg:
+                try:
+                    if grid.grid_array[xposition - i][yposition].wall == False:
+                        self.movements["x--"] = grid.grid_array[xposition - i][yposition]
+                    else:
+                        xNeg = False
+                except IndexError:
+                    self.movements["x--"] = 0
+                    pass
+            if yPos:
+                try:
+                    if grid.grid_array[xposition][yposition + i].wall == False:
+                        self.movements["y++"] = grid.grid_array[xposition][yposition + i]
+                    else:
+                        yPos = False
+                except IndexError:
+                    self.movements["y++"] = 0
+                    pass
+            if yNeg:
+                try:
+                    if grid.grid_array[xposition][yposition - i].wall == False:
+                        self.movements["y--"] = grid.grid_array[xposition][yposition - i]
+                    else:
+                        yNeg = False
+                except IndexError:
+                    self.movements["y--"] = 0
+                    pass
+        
+        # colour the cells
+        for i in self.movements.keys():
+            if self.movements[i]:
+                if len(i) == 2:
+                    self.movements[i].colour = LIGHTER_BLUE
+                    self.movements[i].draw(SCREEN_SURFACE)
+                else:
+                    self.movements[i].colour = LIGHT_BLUE
+                    self.movements[i].draw(SCREEN_SURFACE)
+        
     def draw(self, surface):
         self.rect = pygame.Rect(
             self.cell.x * self.cell.cell_size,
@@ -94,8 +137,27 @@ class Player(pygame.sprite.Sprite):
             self.cell.cell_size,
             self.cell.cell_size
         )
-        pygame.draw.rect(surface, BLUE, self.rect)
+        pygame.draw.rect(surface, DARK_BLUE, self.rect)
 
+    def move(self, grid):
+
+        xposition = self.cell.x
+        yposition = self.cell.y
+
+        self.getmovements(self.cell, grid)
+
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN: 
+                if event.key == pygame.K_UP:
+                    self.cell
+                if event.key == pygame.K_DOWN:
+                    self.rect.move_ip(0, 5)
+                if event.key == pygame.K_LEFT:
+                    self.rect.move_ip(-5, 0)
+                if event.key == pygame.K_RIGHT:
+                    self.rect.move_ip(5, 0)
+        
+        pygame.display.flip()
 
     def __init__(self, grid, start_cell, surface):
         super().__init__()
@@ -105,24 +167,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.topleft = (start_cell.x * grid.cell_size, start_cell.y * grid.cell_size)
         surface.blit(self.surface, self.rect)
         self.movements = { "x+": 0, "x-": 0, "y+": 0, "y-": 0, "x++": 0, "x--": 0, "y++": 0, "y--": 0 }
-        self.getPotentialCells(start_cell, grid)
-
-    def move(self, grid):
-
-        processBasicEvents(False)
-
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN: 
-                if event.key == pygame.K_UP:
-                    self.rect.move_ip(5, 0)
-                if event.key == pygame.K_DOWN:
-                    self.rect.move_ip(0, 5)
-                if event.key == pygame.K_LEFT:
-                    self.rect.move_ip(-5, 0)
-                if event.key == pygame.K_RIGHT:
-                    self.rect.move_ip(5, 0)
-        
-        pygame.display.flip()
+        self.getmovements(start_cell, grid)
 
 
 class Grid():
@@ -312,9 +357,6 @@ while game_active:
         
         # 30 ms
         clockspeed.tick(30)
-
-        # process input for movement of the player sprite
-        player.move(grid)
 
         processBasicEvents(True)
 
