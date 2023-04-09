@@ -18,9 +18,9 @@ WINDOW_TITLE = "Maze"
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (222, 90, 67)
-DARK_BLUE = (3, 36, 252)
-LIGHTER_BLUE = (3, 194, 252)
-LIGHT_BLUE = (92, 211, 247)
+DARK_BLUE = (15, 99, 255)
+GREY = (92, 92, 92)
+LIGHTER_GRAY = (145, 145, 145)
 GREEN = (28, 252, 3)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -52,13 +52,13 @@ class Player(pygame.sprite.Sprite):
 
     # the possible cells that a player can move to, if they are on the given cell.
     # "y+" IS DOWN AND "y-" IS UP. I REVERSE SO THAT APPEARS LOGICAL IN MOVEMENT DICT
-    def getmovements(self, cell, grid):
+    def getmovements(self, grid):
 
-        # reset previous colours
-        for i in self.movements.keys():
-            if self.movements[i]:
-                if self.movements[i].colour is not WHITE:
-                    self.movements[i].colour = WHITE
+        self.movements.clear()
+
+        cell = self.cell
+
+        print(cell)
 
         xposition = cell.x
         yposition = cell.y
@@ -104,71 +104,106 @@ class Player(pygame.sprite.Sprite):
             if yPos:
                 try:
                     if grid.grid_array[xposition][yposition + i].wall == False:
-                        self.movements["y++"] = grid.grid_array[xposition][yposition + i]
+                        self.movements["y--"] = grid.grid_array[xposition][yposition + i]
                     else:
                         yPos = False
                 except IndexError:
-                    self.movements["y++"] = 0
+                    self.movements["y--"] = 0
                     pass
             if yNeg:
                 try:
                     if grid.grid_array[xposition][yposition - i].wall == False:
-                        self.movements["y--"] = grid.grid_array[xposition][yposition - i]
+                        self.movements["y++"] = grid.grid_array[xposition][yposition - i]
                     else:
                         yNeg = False
                 except IndexError:
-                    self.movements["y--"] = 0
+                    self.movements["y++"] = 0
                     pass
-        
-        # colour the cells
+
         for i in self.movements.keys():
             if self.movements[i]:
-                if len(i) == 2:
-                    self.movements[i].colour = LIGHTER_BLUE
+                grid.higlighted_cells.add(self.movements[i])
+                if len(i) == 3:
+                    self.movements[i].colour = LIGHTER_GRAY
                     self.movements[i].draw(SCREEN_SURFACE)
-                else:
-                    self.movements[i].colour = LIGHT_BLUE
-                    self.movements[i].draw(SCREEN_SURFACE)
-        
-    def draw(self, surface):
+
+        print(self.movements)
+ 
+
+    # draw player cell
+    def draw(self):
         self.rect = pygame.Rect(
             self.cell.x * self.cell.cell_size,
             self.cell.y * self.cell.cell_size,
             self.cell.cell_size,
             self.cell.cell_size
         )
-        pygame.draw.rect(surface, DARK_BLUE, self.rect)
+        pygame.draw.rect(self.screen, DARK_BLUE, self.rect)
 
-    def move(self, grid):
+    def move(self, grid, arrow_key_state, event):
 
-        xposition = self.cell.x
-        yposition = self.cell.y
-
-        self.getmovements(self.cell, grid)
-
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN: 
-                if event.key == pygame.K_UP:
-                    self.cell
-                if event.key == pygame.K_DOWN:
-                    self.rect.move_ip(0, 5)
-                if event.key == pygame.K_LEFT:
-                    self.rect.move_ip(-5, 0)
-                if event.key == pygame.K_RIGHT:
-                    self.rect.move_ip(5, 0)
+        print(event.type)
         
-        pygame.display.flip()
+        grid.higlighted_cells.update()
+
+        mods = pygame.key.get_mods()
+
+        if event.type == pygame.KEYDOWN:
+            if mods and pygame.KMOD_SHIFT:
+                if event.key == pygame.K_LEFT and arrow_key_state["left"] and "x--" in self.movements and self.movements["x--"]:
+                        # move left
+                        self.cell = self.movements["x--"]
+                        arrow_key_state["left"] = False
+                elif event.key == pygame.K_RIGHT and arrow_key_state["right"] and "x++" in self.movements and self.movements["x++"]:
+                        # move right
+                        self.cell = self.movements["x++"]
+                        arrow_key_state["right"] = False
+                elif event.key == pygame.K_UP and arrow_key_state["up"] and "y++" in self.movements and self.movements["y++"]:
+                        # move up
+                        self.cell = self.movements["y++"]
+                        arrow_key_state["up"] = False
+                elif event.key == pygame.K_DOWN and arrow_key_state["down"] and "y--" in self.movements and self.movements["y--"]:
+                        # move down
+                        self.cell = self.movements["y--"]
+                        arrow_key_state["down"] = False
+            else:
+                if event.key == pygame.K_LEFT and arrow_key_state["left"] and "x-" in self.movements and self.movements["x-"]:
+                        # move left
+                        self.cell = self.movements["x-"]
+                        arrow_key_state["left"] = False
+                elif event.key == pygame.K_RIGHT and arrow_key_state["right"] and "x+" in self.movements and self.movements["x+"]:
+                        # move right
+                        self.cell = self.movements["x+"]
+                        arrow_key_state["right"] = False
+                elif event.key == pygame.K_UP and arrow_key_state["up"] and "y+" in self.movements and self.movements["y+"]:
+                        # move up
+                        self.cell = self.movements["y+"]
+                        arrow_key_state["up"] = False
+                elif event.key == pygame.K_DOWN and arrow_key_state["down"] and "y-" in self.movements and self.movements["y-"]:
+                        # move down
+                        self.cell = self.movements["y-"]
+                        arrow_key_state["down"] = False
+            
+        elif event.type == pygame.KEYUP:
+            if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT or event.key == pygame.K_UP or event.key == pygame.K_DOWN:
+                arrow_key_state = { key: True for key in arrow_key_state }
+
+        self.getmovements(grid)
+
+        self.draw()
+
+        return arrow_key_state
 
     def __init__(self, grid, start_cell, surface):
         super().__init__()
         self.cell = start_cell
+        self.screen = surface
         self.surface = pygame.Surface((start_cell.cell_size, start_cell.cell_size))
         self.rect = self.surface.get_rect()
         self.rect.topleft = (start_cell.x * grid.cell_size, start_cell.y * grid.cell_size)
         surface.blit(self.surface, self.rect)
         self.movements = { "x+": 0, "x-": 0, "y+": 0, "y-": 0, "x++": 0, "x--": 0, "y++": 0, "y--": 0 }
-        self.getmovements(start_cell, grid)
-
+        self.getmovements(grid)
 
 class Grid():
 
@@ -191,6 +226,10 @@ class Grid():
                 self.cell_size
             )
             pygame.draw.rect(surface, self.colour, self.rect)
+        
+        def update(self, colour=WHITE):
+            self.colour = colour
+            self.draw(SCREEN_SURFACE)
 
     @staticmethod
     def draw(cols, rows, cell_size):
@@ -310,6 +349,7 @@ class Grid():
 
     def __init__(self, col_num, row_num, cell_size):
         self.grid_array = Grid.draw(col_num, row_num, cell_size)
+        self.higlighted_cells = pygame.sprite.Group()
         self.col_num = col_num
         self.row_num = row_num
         self.cell_size = cell_size
@@ -322,8 +362,15 @@ game_active = True
 
 playing = True
 
-draw_maze = True
+# keep track of key states
+arrow_key_state = {
+    "up": True,
+    "down": True,
+    "left": True,
+    "right": True
+}
 
+# main grid obj
 grid = Grid(GRID_WIDTH, GRID_HEIGHT, CELL_SIZE)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -332,19 +379,15 @@ grid = Grid(GRID_WIDTH, GRID_HEIGHT, CELL_SIZE)
 
 while game_active:
 
-
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # GAME SETUP
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    # check if finished
-    if draw_maze:
-        grid.backtrackRecursively(grid, False)
-        draw_maze = False
+    grid.backtrackRecursively(grid, False)
     
     # create player sprite, specifying cell to start on
     player = Player(grid, grid.grid_array[2][2], SCREEN_SURFACE)
-    player.draw(SCREEN_SURFACE)
+    player.draw()
 
     # update screen
     processBasicEvents(True)
@@ -356,10 +399,18 @@ while game_active:
     while playing:
         
         # 30 ms
-        clockspeed.tick(30)
+        clockspeed.tick(10)
 
-        processBasicEvents(True)
+        # move if key pressed
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN or pygame.KEYUP:
+                arrow_key_state = player.move(grid, arrow_key_state, event)
 
+        pygame.display.flip()
+        
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # END OF GAME LOOP
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
