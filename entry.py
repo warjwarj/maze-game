@@ -1,16 +1,18 @@
 if __name__ == "__main__":
+
     import pygame
     import sys
+    import enum
 
-    from utils.Player import Player
-    from utils.Grid import Grid
+    from modules.Player import Player
+    from modules.Grid import Grid
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # CONSTANTS + GLOBALS
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    CELL_SIZE = 30 # in px
+    CELL_SIZE = 26 # in px
     GRID_WIDTH = 29 # x
     GRID_HEIGHT = 29 # y
 
@@ -44,6 +46,8 @@ if __name__ == "__main__":
         if update_display:
             pygame.display.flip()
 
+    clas
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # GAME LOOP VARIABLES
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -76,7 +80,7 @@ if __name__ == "__main__":
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         # create maze from grid
-        grid.backtrackRecursively(grid, False)
+        maze = grid.backtrackRecursively(grid, False)
         
         # create player sprite, specifying cell to start on
         player = Player(grid, grid.grid_array[2][2], SCREEN_SURFACE)
@@ -101,6 +105,8 @@ if __name__ == "__main__":
                     sys.exit()
                 elif event.type == pygame.KEYDOWN or pygame.KEYUP:
                     arrow_key_state = player.move(grid, arrow_key_state, event)
+
+            if 
 
             pygame.display.flip()
             

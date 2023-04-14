@@ -36,6 +36,7 @@ class Grid():
             self.visited = False
             self.colour = WHITE
             self.wall = False
+            self.finish = False
 
     def draw(self, cols, rows, cell_size):
         grid = []
@@ -69,6 +70,10 @@ class Grid():
             for y in range(rows):
                 cell = grid[x][y]
                 cell.draw(self.screen)
+
+        grid[rows - 3][cols - 3].finish = True
+        grid[rows - 3][cols - 3].colour = GREEN
+        grid[rows - 3][cols - 3].draw(self.screen)
             
         return grid
     
