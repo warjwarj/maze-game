@@ -71,9 +71,10 @@ class Grid():
                 cell = grid[x][y]
                 cell.draw(self.screen)
 
-        grid[rows - 3][cols - 3].finish = True
-        grid[rows - 3][cols - 3].colour = GREEN
-        grid[rows - 3][cols - 3].draw(self.screen)
+        self.finish = grid[rows - 3][cols - 3]
+        self.finish.finish = True
+        self.finish.colour = GREEN
+        self.finish.draw(self.screen)
             
         return grid
     
@@ -159,10 +160,12 @@ class Grid():
                     pygame.quit()
                     sys.exit()
 
+    def create(self):
+        self.grid_array = Grid.draw(self, self.col_num, self.row_num, self.cell_size)
+        self.higlighted_cells = pygame.sprite.Group()
+
     def __init__(self, col_num, row_num, cell_size, screen):
         self.screen = screen
-        self.grid_array = Grid.draw(self, col_num, row_num, cell_size)
-        self.higlighted_cells = pygame.sprite.Group()
         self.col_num = col_num
         self.row_num = row_num
         self.cell_size = cell_size

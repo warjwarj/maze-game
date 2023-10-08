@@ -2,21 +2,18 @@ if __name__ == "__main__":
 
     import pygame
     import sys
-    import enum
+
+    pygame.init()
 
     from modules.Player import Player
     from modules.Grid import Grid
-
+    from modules.Game import Game
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # CONSTANTS + GLOBALS
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    CELL_SIZE = 26 # in px
-    GRID_WIDTH = 29 # x
-    GRID_HEIGHT = 29 # y
-
-    WINDOW_TITLE = "Maze"
+    game = Game()
 
     BLACK = (0, 0, 0)
     WHITE = (255, 255, 255)
@@ -29,10 +26,8 @@ if __name__ == "__main__":
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # SETUP FOR GENERIC PYGAME STUFF
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    pygame.init()
-    SCREEN_SURFACE = pygame.display.set_mode((CELL_SIZE * GRID_WIDTH, CELL_SIZE * GRID_HEIGHT))
-    pygame.display.set_caption(WINDOW_TITLE)
+    
+    pygame.display.set_caption("Solve the maze!")
     clockspeed = pygame.time.Clock()
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -44,19 +39,14 @@ if __name__ == "__main__":
             pygame.quit()
             sys.exit()
         if update_display:
-            pygame.display.flip()
-
-    clas
+            pygame.display.flip()  
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # GAME LOOP VARIABLES
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     # while game window is active
-    game_active = True
-
-    # while user is playing game
-    playing = True
+    running = True
 
     # keep track of key states
     arrow_key_state = {
@@ -67,36 +57,50 @@ if __name__ == "__main__":
     }
 
     # main grid obj
-    grid = Grid(GRID_WIDTH, GRID_HEIGHT, CELL_SIZE, SCREEN_SURFACE)
+    grid = Grid(game.grid_width, game.grid_height, game.cell_size, game.screen)
+
+    # state
+    state = Game.State.unknown
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # GAME LOOP
+    # MAIN GAME LOOP
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    while game_active:
+    while running:
 
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # GAME SETUP
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+        # keep track of game state
+        gamestate = Game.State.initialising
+
+        # seperate from __init__() for easy redrawing
+        grid.create()
+
         # create maze from grid
-        maze = grid.backtrackRecursively(grid, False)
+        maze = grid.backtrackRecursively(grid, True)
         
         # create player sprite, specifying cell to start on
-        player = Player(grid, grid.grid_array[2][2], SCREEN_SURFACE)
+        player = Player(grid, grid.grid_array[2][2], game.screen)
         player.draw()
 
         # update screen
         processBasicEvents(True)
 
+        # keep track of time
+        timer = pygame.time.get_ticks()
+
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # PLAY GAME
+        # GAME PLAYING
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        while playing:
+        gamestate = Game.State.playing 
+
+        while gamestate == Game.State.playing:
             
             # 30 ms
-            clockspeed.tick(10)
+            clockspeed.tick(60)
 
             # move if key pressed
             for event in pygame.event.get():
@@ -106,7 +110,10 @@ if __name__ == "__main__":
                 elif event.type == pygame.KEYDOWN or pygame.KEYUP:
                     arrow_key_state = player.move(grid, arrow_key_state, event)
 
-            if 
+            # check if at finish
+            if player.cell == grid.finish:
+                game.level += 1
+                break
 
             pygame.display.flip()
             
