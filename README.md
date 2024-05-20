@@ -1,4 +1,4 @@
-maze-game!<br>
+<h1>maze-game!<h1><br>
 
 Run entry.py to start.<br>
 
